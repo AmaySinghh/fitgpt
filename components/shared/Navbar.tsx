@@ -49,8 +49,9 @@ export default function Navbar() {
           <Button
             size="sm"
             className="bg-emerald-500 hover:bg-emerald-400 text-black font-semibold"
+            asChild
           >
-            Get started
+            <Link href="/register">Get started</Link>
           </Button>
         </div>
       </div>
