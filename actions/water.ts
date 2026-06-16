@@ -1,11 +1,11 @@
 "use server";
 
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-export async function logWater(amount: number) {
+export async function logWater(amountMl: number) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -15,8 +15,31 @@ export async function logWater(amount: number) {
   await db.waterLog.create({
     data: {
       userId: session.user.id,
-      amount,
+      amount: amountMl,
     },
+  });
+
+  revalidatePath("/water");
+  return { success: true };
+}
+
+export async function deleteWaterLog(id: string) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const waterLog = await db.waterLog.findUnique({
+    where: { id },
+  });
+
+  if (!waterLog || waterLog.userId !== session.user.id) {
+    return { error: "Unauthorized" };
+  }
+
+  await db.waterLog.delete({
+    where: { id },
   });
 
   revalidatePath("/water");
@@ -27,7 +50,7 @@ export async function getTodaysWater() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return { total: 0, logs: [] };
+    return [];
   }
 
   const start = new Date();
@@ -36,29 +59,19 @@ export async function getTodaysWater() {
   const end = new Date();
   end.setHours(23, 59, 59, 999);
 
-  const logs = await db.waterLog.findMany({
+  return await db.waterLog.findMany({
     where: {
       userId: session.user.id,
-      loggedAt: { gte: start, lte: end },
+      loggedAt: {
+        gte: start,
+        lte: end,
+      },
     },
     orderBy: { loggedAt: "desc" },
   });
-
-  const total = logs.reduce((sum, log) => sum + log.amount, 0);
-
-  return { total, logs };
 }
 
-export async function deleteWaterLog(id: string) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    redirect("/login");
-  }
-
-  await db.waterLog.delete({
-    where: { id, userId: session.user.id },
-  });
-
-  revalidatePath("/water");
+export async function getTodaysWaterTotal() {
+  const logs = await getTodaysWater();
+  return logs.reduce((total, log) => total + log.amount, 0);
 }

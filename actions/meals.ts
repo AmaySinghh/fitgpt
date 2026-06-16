@@ -45,14 +45,20 @@ export async function deleteMeal(id: string) {
     redirect("/login");
   }
 
+  const meal = await db.mealLog.findUnique({
+    where: { id },
+  });
+
+  if (!meal || meal.userId !== session.user.id) {
+    return { error: "Unauthorized" };
+  }
+
   await db.mealLog.delete({
-    where: {
-      id,
-      userId: session.user.id,
-    },
+    where: { id },
   });
 
   revalidatePath("/meals");
+  return { success: true };
 }
 
 export async function getTodaysMeals() {
