@@ -21,7 +21,7 @@ Modern fitness journeys lack personalization. Generic meal plans don't account f
 
 ## Live Demo
 
-> **Live App:** [Coming Soon — Deploy to Vercel]
+> **Live App:** https://fitgpt.vercel.app
 >
 > **GitHub Repository:** https://github.com/AmaySinghh/fitgpt
 
