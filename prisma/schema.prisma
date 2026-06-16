@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile        Profile?
+  mealLogs       MealLog[]
+  mealPlans      MealPlan[]
+  workoutPlans   WorkoutPlan[]
+  chatMessages   ChatMessage[]
+  subscription   Subscription?
+  usageLogs      UsageLog[]
+  waterLogs      WaterLog[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Profile {
+  id            String        @id @default(cuid())
+  userId        String        @unique
+  age           Int
+  height        Float
+  weight        Float
+  gender        Gender
+  goal          FitnessGoal
+  activityLevel ActivityLevel
+  bmi           Float
+  bmr           Float
+  dailyCalories Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum FitnessGoal {
+  LOSE_WEIGHT
+  GAIN_MUSCLE
+  MAINTAIN
+  IMPROVE_FITNESS
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHTLY_ACTIVE
+  MODERATELY_ACTIVE
+  VERY_ACTIVE
+  EXTREMELY_ACTIVE
+}
+
+model MealLog {
+  id        String     @id @default(cuid())
+  userId    String
+  name      String
+  calories  Int
+  protein   Float
+  carbs     Float
+  fat       Float
+  imageUrl  String?
+  source    MealSource @default(MANUAL)
+  loggedAt  DateTime   @default(now())
+  createdAt DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, loggedAt])
+  @@map("meal_logs")
+}
+
+enum MealSource {
+  MANUAL
+  AI_SCAN
+  AI_PLAN
+}
+
+model MealPlan {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  meals        Json
+  totalCals    Int
+  totalProtein Float
+  totalCarbs   Float
+  totalFat     Float
+  generatedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, generatedAt])
+  @@map("meal_plans")
+}
+
+model WorkoutPlan {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  goal        String
+  days        Json
+  generatedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, generatedAt])
+  @@map("workout_plans")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  userId    String
+  role      MessageRole
+  content   String
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("chat_messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  userId                 String             @unique
+  plan                   Plan               @default(FREE)
+  status                 SubscriptionStatus @default(ACTIVE)
+  razorpaySubscriptionId String?
+  razorpayCustomerId     String?
+  currentPeriodEnd       DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  EXPIRED
+}
+
+model UsageLog {
+  id      String    @id @default(cuid())
+  userId  String
+  feature AIFeature
+  usedAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, feature, usedAt])
+  @@map("usage_logs")
+}
+
+enum AIFeature {
+  MEAL_PLAN
+  FOOD_SCAN
+  CHAT
+  WORKOUT_PLAN
+}
+
+model WaterLog {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  loggedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, loggedAt])
+  @@map("water_logs")
+}
