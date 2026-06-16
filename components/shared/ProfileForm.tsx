@@ -11,9 +11,28 @@ interface ProfileFormProps {
   profile: Profile | null;
 }
 
+function calculateBMI(height: number, weight: number) {
+  if (height <= 0 || weight <= 0) return null;
+  const heightInMeters = height / 100;
+  return weight / (heightInMeters * heightInMeters);
+}
+
+function getBMICategory(bmi: number) {
+  if (bmi < 18.5) return { category: "Underweight", color: "text-blue-400" };
+  if (bmi < 25) return { category: "Normal weight", color: "text-green-400" };
+  if (bmi < 30) return { category: "Overweight", color: "text-yellow-400" };
+  return { category: "Obese", color: "text-red-400" };
+}
+
 export default function ProfileForm({ profile }: ProfileFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [height, setHeight] = useState(profile?.height || "");
+  const [weight, setWeight] = useState(profile?.weight || "");
+
+  const bmi =
+    height && weight ? calculateBMI(Number(height), Number(weight)) : null;
+  const bmiCategory = bmi ? getBMICategory(bmi) : null;
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -78,7 +97,8 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
               name="height"
               type="number"
               placeholder="175"
-              defaultValue={profile?.height}
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
               required
               className="bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500 focus:border-emerald-500"
             />
@@ -93,12 +113,27 @@ export default function ProfileForm({ profile }: ProfileFormProps) {
               name="weight"
               type="number"
               placeholder="70"
-              defaultValue={profile?.weight}
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
               required
               className="bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500 focus:border-emerald-500"
             />
           </div>
         </div>
+
+        {bmi && bmiCategory && (
+          <div className="mt-4 p-4 rounded-xl bg-zinc-800 border border-white/10">
+            <p className="text-zinc-400 text-sm mb-2">Your BMI</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-white">
+                {bmi.toFixed(1)}
+              </span>
+              <span className={`text-lg font-semibold ${bmiCategory.color}`}>
+                {bmiCategory.category}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Fitness Goals */}
