@@ -34,7 +34,7 @@ export default function Footer() {
         </div>
 
         <p className="text-sm text-zinc-500">
-          © 2025 FitGPT. All rights reserved.
+          © 2026 FitGPT. All rights reserved.
         </p>
       </div>
     </footer>
